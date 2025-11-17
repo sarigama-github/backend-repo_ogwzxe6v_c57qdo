@@ -11,7 +11,7 @@ Model name is converted to lowercase for the collection name:
 - BlogPost -> "blogs" collection
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
 
 # Example schemas (replace with your own):
@@ -22,7 +22,7 @@ class User(BaseModel):
     Collection name: "user" (lowercase of class name)
     """
     name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
+    email: EmailStr = Field(..., description="Email address")
     address: str = Field(..., description="Address")
     age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
     is_active: bool = Field(True, description="Whether user is active")
@@ -38,11 +38,25 @@ class Product(BaseModel):
     category: str = Field(..., description="Product category")
     in_stock: bool = Field(True, description="Whether product is in stock")
 
-# Add your own schemas here:
-# --------------------------------------------------
+# WebConsulting.ie specific schemas
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Inquiry(BaseModel):
+    """
+    Sales/Contact inquiries from website forms
+    Collection name: "inquiry"
+    """
+    name: str = Field(..., description="Full name of the prospect")
+    email: EmailStr = Field(..., description="Contact email")
+    company: Optional[str] = Field(None, description="Company name")
+    phone: Optional[str] = Field(None, description="Phone number")
+    message: str = Field(..., description="Message or project brief")
+    consent: bool = Field(False, description="User consent for data processing and follow-up")
+    source: Optional[str] = Field("website", description="Lead source e.g. website, ads, referral")
+
+class Subscriber(BaseModel):
+    """
+    Newsletter subscribers
+    Collection name: "subscriber"
+    """
+    email: EmailStr = Field(..., description="Subscriber email")
+    source: Optional[str] = Field("footer", description="Where the subscription happened")

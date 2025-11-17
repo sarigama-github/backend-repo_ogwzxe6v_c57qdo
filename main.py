@@ -1,6 +1,11 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional
+
+from database import create_document
+from schemas import Inquiry as InquirySchema, Subscriber as SubscriberSchema
 
 app = FastAPI()
 
@@ -19,6 +24,35 @@ def read_root():
 @app.get("/api/hello")
 def hello():
     return {"message": "Hello from the backend API!"}
+
+class InquiryRequest(InquirySchema):
+    pass
+
+class InquiryResponse(BaseModel):
+    id: str
+    message: str
+
+@app.post("/api/inquiries", response_model=InquiryResponse)
+async def create_inquiry(payload: InquiryRequest):
+    try:
+        inserted_id = create_document("inquiry", payload)
+        return {"id": inserted_id, "message": "Inquiry received. Our consultants will reach out shortly."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class SubscribeRequest(SubscriberSchema):
+    pass
+
+class SubscribeResponse(BaseModel):
+    message: str
+
+@app.post("/api/subscribe", response_model=SubscribeResponse)
+async def subscribe_email(payload: SubscribeRequest):
+    try:
+        create_document("subscriber", payload)
+        return {"message": "You're subscribed. Thanks for joining!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/test")
 def test_database():
